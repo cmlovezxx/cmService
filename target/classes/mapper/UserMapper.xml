@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.cm.dao.UserDao">
+    <!--用户信息-->
+    <resultMap id="baseResultMap" type="cn.com.cm.dao.entity.UserEntity">
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_password" property="userPassword"/>
+        <result column="role_id" property="roleId"/>
+        <result column="real_name" property="realName"/>
+        <result column="phone" property="phone"/>
+        <result column="work_id" property="workId"/>
+        <result column="depart_id" property="departId"/>
+        <result column="status" property="status"/>
+        <result column="last_login_ip" property="lastLoginIp"/>
+        <result column="last_login_dt" property="lastLoginDt"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="create_dt" property="createDt"/>
+        <result column="create_uid" property="createUid"/>
+        <result column="modify_dt" property="modifyDt"/>
+        <result column="modify_uid" property="modifyUid"/>
+
+    </resultMap>
+
+    <!--用户管理页面List-->
+    <resultMap id="userResultMap" type="cn.com.cm.dao.entity.UserEntity">
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_password" property="userPassword"/>
+        <result column="status" property="status"/>
+        <result column="last_login_ip" property="lastLoginIp"/>
+        <result column="last_login_dt" property="lastLoginDt"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="create_dt" property="createDt"/>
+        <result column="create_uid" property="createUid"/>
+        <result column="modify_dt" property="modifyDt"/>
+        <result column="modify_uid" property="modifyUid"/>
+        <result column="phone" property="phone"/>
+        <result column="work_id" property="workId"/>
+        <result column="depart_id" property="departId"/>
+        <result column="role_name" property="roleName"/>
+        <result column="real_name" property="realName"/>
+    </resultMap>
+    <!--查询结果（通用）-->
+    <sql id="baseColumns">
+        user_id,
+        user_name,
+        user_password,
+        real_name,
+        role_id,
+        phone,
+        work_id,
+        depart_id,
+        status,
+        last_login_ip,
+        last_login_dt,
+        del_flag,
+        create_dt,
+        create_uid,
+        modify_dt,
+        modify_uid
+    </sql>
+
+    <!--根据用户名查询用户信息-->
+    <select id="findByUsername" parameterType="cn.com.cm.dao.entity.UserEntity"
+            resultMap="baseResultMap">
+        select
+        <include refid="baseColumns"/>
+        from s_user
+        where user_name = #{userName}
+    </select>
+
+    <!-- 更新用户最后一次登录时间  -->
+    <update id="updateUserLastLoginDTAndLastLoginIp" parameterType="cn.com.cm.dao.entity.UserEntity">
+        UPDATE s_user set
+        last_login_dt = #{modifyDt},
+        last_login_ip=#{lastLoginIp}
+        WHERE user_name = #{userName}
+        AND del_flag = '0'
+    </update>
+
+    <!--获取用户管理list数据-->
+    <select id="getUser" parameterType="cn.com.cm.dao.entity.UserEntity" resultMap="userResultMap">
+
+        SELECT
+        t.user_id,
+        t.user_name,
+        t.real_name,
+        t.user_password,
+        t.status,
+        t.last_login_ip,
+        t.last_login_dt,
+        t.del_flag,
+        t.create_dt,
+        t.create_uid,
+        t.modify_dt,
+        t.modify_uid,
+        t.phone,
+        t.work_id,
+        t.depart_id
+        FROM s_user t
+        <where>
+            t.del_flag=0
+            <if test="userName != null and userName !='' ">
+                AND t.user_name like CONCAT('%',REPLACE(REPLACE(REPLACE(#{userName},'%','/%'),'_','/_'),'\\','/\\'),'%') ESCAPE '/'
+            </if>
+            <if test="phone != null and phone !='' ">
+                AND t.phone like CONCAT('%',REPLACE(REPLACE(REPLACE(#{phone},'%','/%'),'_','/_'),'\\','/\\'),'%') ESCAPE '/'
+            </if>
+            <if test="realName != null and realName !='' ">
+                AND t.real_name like CONCAT('%',REPLACE(REPLACE(REPLACE(#{realName},'%','/%'),'_','/_'),'\\','/\\'),'%') ESCAPE '/'
+            </if>
+            <!--<if test="userName != null and userName !='' ">
+                AND CONCAT(t.user_name,t.work_id,t.phone,t.real_name) LIKE
+                CONCAT('%',REPLACE(REPLACE(REPLACE(#{userName},'%','/%'),'_','/_'),'\\','/\\'),'%') ESCAPE '/'
+            </if>-->
+            <if test="departId != null and departId !='' ">
+                AND t.depart_id=#{departId}
+            </if>
+            <if test="status != null and status !='' ">
+                AND t.status=#{status}
+            </if>
+
+        </where>
+    </select>
+    <!--用户管理-添加用户-->
+    <insert id="addUser" parameterType="cn.com.cm.dao.entity.UserEntity">
+        insert into s_user
+        ( user_id,
+        user_name,
+        user_password,
+        phone,
+        work_id,
+        depart_id,
+        status,
+        create_dt,
+        create_uid,
+        modify_dt,
+        modify_uid,
+        role_id,
+        real_name
+        )
+        values(
+        #{userId},
+        #{userName},
+        #{userPassword},
+        #{phone},
+        #{workId},
+        #{departId},
+        '1',
+        #{createDt},
+        #{createUid},
+        #{modifyDt},
+        #{modifyUid},
+        #{roleId},
+        #{realName}
+        )
+    </insert>
+
+    <!--根据id获取用户信息-->
+    <select id="getUserById" resultMap="baseResultMap" parameterType="cn.com.cm.dao.entity.UserEntity">
+        SELECT user_id,
+        user_name,
+        user_password,
+        real_name,
+        status,
+        last_login_ip,
+        last_login_dt,
+        del_flag,
+        create_dt,
+        create_uid,
+        modify_dt,
+        modify_uid,
+        phone,
+        work_id,
+        depart_id,
+        role_id
+        FROM s_user where user_id = #{userId}
+    </select>
+    <update id="updateUser" parameterType="cn.com.cm.dao.entity.UserEntity">
+        update s_user
+        <set>
+            USER_NAME = #{userName},
+            PHONE=#{phone},
+            WORK_ID=#{workId},
+            DEPART_ID=#{departId},
+            ROLE_ID=#{roleId},
+            STATUS = '1',
+            MODIFY_DT = #{modifyDt},
+            MODIFY_UID = #{modifyUid}
+        </set>
+        where USER_ID = #{userId}
+    </update>
+    <!--用户启用或者停用-->
+    <update id="startOrStop" parameterType="cn.com.cm.dao.entity.UserEntity">
+        update s_user
+        <set>
+            STATUS = #{status},
+            MODIFY_DT = #{modifyDt},
+            MODIFY_UID = #{modifyUid}
+        </set>
+        where USER_ID = #{userId}
+    </update>
+    <!--重置密码-->
+    <update id="toResetPwd" parameterType="cn.com.cm.dao.entity.UserEntity">
+        update s_user
+        <set>
+            USER_PASSWORD = #{userPassword},
+            MODIFY_DT = #{modifyDt},
+            MODIFY_UID = #{modifyUid}
+        </set>
+        where USER_ID = #{userId}
+    </update>
+    <!--删除用户-->
+    <update id="toRemove" parameterType="cn.com.cm.dao.entity.UserEntity">
+        update s_user
+        <set>
+            DEL_FLAG = 1,
+            MODIFY_DT = #{modifyDt},
+            MODIFY_UID = #{modifyUid}
+        </set>
+        where USER_ID = #{userId}
+    </update>
+    <!--获取用户管理list数据-->
+    <select id="isUser" parameterType="cn.com.cm.dao.entity.UserEntity" resultMap="userResultMap">
+        SELECT
+        t.user_id,
+        t.user_name,
+        t.real_name,
+        t.user_password,
+        t.status,
+        t.last_login_ip,
+        t.last_login_dt,
+        t.del_flag,
+        t.create_dt,
+        t.create_uid,
+        t.modify_dt,
+        t.modify_uid,
+        t.phone,
+        t.work_id,
+        t.depart_id
+        FROM s_user t
+        <where>
+            t.del_flag=0
+            <if test="userId != null and userId !='' ">
+                <![CDATA[AND t.user_id <> #{userId}]]>
+            </if>
+            AND t.user_name = #{userName}
+        </where>
+    </select>
+
+    <select id="checkPassword" parameterType="cn.com.cm.dao.entity.UserEntity"
+            resultMap="userResultMap">
+        select user_id from s_user
+        where
+        user_id = #{userId} and
+        user_password = #{userPassword}
+    </select>
+
+    <!-- 更改用户密码  -->
+    <update id="changePassword" parameterType="cn.com.cm.dao.entity.UserEntity">
+        UPDATE s_user set
+        user_password = #{userPassword},
+        modify_dt = #{modifyDt},
+        modify_uid = #{modifyUid}
+        WHERE user_id = #{userId}
+    </update>
+</mapper>
